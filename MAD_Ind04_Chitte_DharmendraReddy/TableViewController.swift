@@ -27,35 +27,41 @@ class TableViewController: UITableViewController {
 
     func setupActivityIndicator() {
         activityIndicator = UIActivityIndicatorView(style: .large)
-        activityIndicator.center = self.view.center
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
         self.view.addSubview(activityIndicator)
+
+        NSLayoutConstraint.activate([
+            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            activityIndicator.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+
         activityIndicator.startAnimating()
     }
 
+
     func fetchStates() {
-        guard let url = URL(string: "https://cs.okstate.edu/~dchitte/states.php") else { return } // Change to your actual URL
-        
+        guard let url = URL(string: "https://cs.okstate.edu/~dchitte/states.php") else { return }
+
         URLSession.shared.dataTask(with: url) { data, response, error in
-            DispatchQueue.main.async {
+            DispatchQueue.main.async {  // Ensure all UI updates are on the main thread
                 self.activityIndicator.stopAnimating()
                 self.activityIndicator.removeFromSuperview()
-            }
-            
-            guard let data = data else {
-                print("No data in response: \(error?.localizedDescription ?? "Unknown error").")
-                return
-            }
-            
-            if let decodedResponse = try? JSONDecoder().decode([State].self, from: data) {
-                DispatchQueue.main.async {
+
+                guard let data = data else {
+                    print("No data in response: \(error?.localizedDescription ?? "Unknown error")")
+                    return
+                }
+
+                if let decodedResponse = try? JSONDecoder().decode([State].self, from: data) {
                     self.states = decodedResponse
                     self.tableView.reloadData()
+                } else {
+                    print("Invalid response from server")
                 }
-            } else {
-                print("Invalid response from server")
             }
         }.resume()
     }
+
 
     // Table View Data Source Methods
     override func numberOfSections(in tableView: UITableView) -> Int {
